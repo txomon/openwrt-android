@@ -1,8 +1,6 @@
 package com.txomon.openwrt.android;
 
 import android.os.Bundle;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -108,17 +106,10 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    public Object makeUbusRpcClientCall(String ubusObject, String ubusMethod, Map arguments) {
+    public Object makeUbusRpcClientCall(String ubusObject, String ubusMethod, Map arguments)
+            throws UbusRpcException {
         UbusRpcClient rpcClient = new UbusRpcClient(currentUrl);
-        try {
-            return rpcClient.call(ubusObject, ubusMethod, arguments);
-        } catch (UbusRpcException e) {
-            Log.e(TAG, "Bad call", e);
-            return null;
-        } catch (Exception e) {
-            Log.e(TAG, "Unknown error", e);
-            return null;
-        }
+        return rpcClient.call(ubusObject, ubusMethod, arguments);
     }
 
     @Override

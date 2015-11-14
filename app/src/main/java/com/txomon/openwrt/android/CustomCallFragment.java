@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.txomon.openwrt.rpc.UbusRpcException;
 import com.txomon.rx.Events;
 
 import java.util.Map;
@@ -17,7 +18,6 @@ import rx.Observable;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 
@@ -49,25 +49,27 @@ public class CustomCallFragment extends Fragment {
         final Observable<String> ubusMethodText = Events.text(ubusMethod);
         final Observable<Object> sendCallClick = Events.click(sendButton);
 
+                //   .subscribeOn(AndroidSchedulers.mainThread())
+                //   .observeOn(Schedulers.io())
         sendCallClick
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Func1<Object, Observable<Object>>() {
+                .observeOn(Schedulers.io())
+                .map(new Func1<Object, Object>() {
                     @Override
-                    public Observable<Object> call(Object _) {
-                        return Observable.combineLatest(
-                                ubusObjectText,
-                                ubusMethodText,
-                                new Func2<String, String, Object>() {
-                                    @Override
-                                    public Object call(String ubusObject, String ubusMethod) {
-                                        OnCustomCallFragmentInteractionListener activity = (OnCustomCallFragmentInteractionListener) main;
-                                        return activity.makeUbusRpcClientCall(ubusObject, ubusMethod, null);
-                                    }
-                                }
-                        );
+                    public Object call(Object o) {
+                        OnCustomCallFragmentInteractionListener activity = (OnCustomCallFragmentInteractionListener) main;
+                        Object ret;
+                        try {
+                            ret = activity.makeUbusRpcClientCall(
+                                    ubusObject.getText().toString(),
+                                    ubusMethod.getText().toString(),
+                                    null);
+                        } catch (UbusRpcException e) {
+                            return null;
+                        }
+                        return ret;
                     }
                 })
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(((OnCustomCallFragmentInteractionListener) main).getCallResultObserver());
         return view;
     }
@@ -89,7 +91,7 @@ public class CustomCallFragment extends Fragment {
     }
 
     public interface OnCustomCallFragmentInteractionListener {
-        public Object makeUbusRpcClientCall(String method, String path, Map arguments);
+        public Object makeUbusRpcClientCall(String method, String path, Map arguments) throws UbusRpcException;
 
         public Observer<Object> getCallResultObserver();
     }
