@@ -22,8 +22,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:contextClickable="false"
-                android:text="Path"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:text="Object"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/customCallFragmentPathText"
@@ -46,15 +46,15 @@
                 android:layout_gravity="center_vertical"
                 android:contextClickable="false"
                 android:text="Method"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/customCallFragmentMethodText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:capitalize="none"
-                android:autoText="false" />
+                android:autoText="false"
+                android:capitalize="none" />
         </LinearLayout>
 
 

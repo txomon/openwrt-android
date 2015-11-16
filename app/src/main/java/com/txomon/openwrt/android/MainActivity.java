@@ -10,22 +10,31 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.txomon.openwrt.rpc.UbusClient;
 import com.txomon.openwrt.rpc.UbusRpcClient;
 import com.txomon.openwrt.rpc.UbusRpcException;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
+import rx.Observable;
 import rx.Observer;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        CustomCallFragment.OnCustomCallFragmentInteractionListener {
+        UbusRpcFragmentInteractionListenerInterface,
+        ObjectExploreFragment.ObjectExploreFragmentInteractionListenerInterface {
 
     private static final String TAG = "OpenwrtMainActivity";
     private String currentUrl;
+    private UbusClient currentClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +56,30 @@ public class MainActivity extends AppCompatActivity
 
         // Set up current state
         currentUrl = "http://192.168.0.30:8081/";
-        navigationView.setCheckedItem(R.id.nav_custom);
-        this.setCustomFragment();
+        currentClient = new UbusClient(currentUrl);
+
+        Observable
+                .fromCallable(
+                        new Callable<Boolean>() {
+                            @Override
+                            public Boolean call() throws Exception {
+                                return currentClient.update();
+                            }
+                        }
+                )
+                .retryWhen(new Func1<Observable<? extends Throwable>, Observable<?>>() {
+                    @Override
+                    public Observable<?> call(Observable<? extends Throwable> observable) {
+                        if (observable.toBlocking().first() instanceof UbusRpcException)
+                            return Observable.timer(5, TimeUnit.SECONDS);
+                        return Observable.empty();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+
+        navigationView.setCheckedItem(R.id.nav_explore);
+        this.setExploreFragment();
     }
 
     @Override
@@ -89,8 +120,8 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_call) {
-            // Handle the camera action
+        if (id == R.id.nav_explore) {
+            this.setExploreFragment();
         } else if (id == R.id.nav_custom) {
             this.setCustomFragment();
         }
@@ -101,8 +132,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void setCustomFragment() {
+        this.setTitle(R.string.custom_name);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.main_content, new CustomCallFragment())
+                .commit();
+    }
+
+    public void setExploreFragment() {
+        this.setTitle(R.string.explore_name);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.main_content, new ObjectExploreFragment())
                 .commit();
     }
 
@@ -110,6 +149,11 @@ public class MainActivity extends AppCompatActivity
             throws UbusRpcException {
         UbusRpcClient rpcClient = new UbusRpcClient(currentUrl);
         return rpcClient.call(ubusObject, ubusMethod, arguments);
+    }
+
+    @Override
+    public Object makeUbusClientCall(String ubusObject, String ubusMethod, Map arguments) throws UbusRpcException {
+        return currentClient.call(ubusObject, ubusMethod, arguments);
     }
 
     @Override
@@ -132,7 +176,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 Gson gson = new Gson();
                 try {
-                    Log.d(TAG, "Received value" + gson.toJson(o));
+                    Log.d(TAG, "Received value " + gson.toJson(o));
                 } catch (JsonParseException e) {
                     Log.wtf(TAG, "Failed json serialization of object", e);
                 }
@@ -141,5 +185,14 @@ public class MainActivity extends AppCompatActivity
         };
     }
 
+    @Override
+    public void handleCallError(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void switchToMethodExploreFragment(String object) {
+        Log.d(TAG, "Switching to new fragment (dry)");
+    }
 }
 
