@@ -3,6 +3,7 @@ package com.txomon.openwrt.android;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +12,10 @@ import android.widget.ExpandableListView;
 import com.txomon.rx.Events;
 
 import rx.Observable;
+import rx.functions.Func1;
 
 public class ObjectExploreFragment extends Fragment {
+    private static final String TAG = "ObjectExploreFragment";
 
     public ObjectExploreFragment() {
         // Required empty public constructor
@@ -37,7 +40,14 @@ public class ObjectExploreFragment extends Fragment {
 
         final Observable<Integer> objectListClick = Events.itemClick(objectList);
 
-
+        objectListClick
+                .map(new Func1<Integer, String>() {
+                    @Override
+                    public String call(Integer integer) {
+                        Log.d(TAG, "Called with " + integer);
+                        return "Hi";
+                    }
+                });
         return view;
     }
 
