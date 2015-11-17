@@ -14,16 +14,16 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.txomon.openwrt.rpc.UbusClient;
-import com.txomon.openwrt.rpc.UbusRpcClient;
-import com.txomon.openwrt.rpc.UbusRpcException;
+import com.txomon.openwrt.ubusrpc.UbusClient;
+import com.txomon.openwrt.ubusrpc.UbusRpcClient;
+import com.txomon.openwrt.ubusrpc.UbusRpcException;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Observer;
+import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -35,6 +35,11 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = "OpenwrtMainActivity";
     private String currentUrl;
     private UbusClient currentClient;
+
+    @Override
+    public UbusClient getCurrentClient() {
+        return currentClient;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

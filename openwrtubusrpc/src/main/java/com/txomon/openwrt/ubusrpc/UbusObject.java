@@ -1,8 +1,7 @@
-package com.txomon.openwrt.rpc;
+package com.txomon.openwrt.ubusrpc;
 
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

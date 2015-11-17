@@ -1,4 +1,4 @@
-package com.txomon.openwrt.rpc;
+package com.txomon.openwrt.ubusrpc;
 
 import java.util.Map;
 

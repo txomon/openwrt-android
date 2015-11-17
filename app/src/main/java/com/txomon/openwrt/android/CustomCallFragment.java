@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.txomon.openwrt.rpc.UbusRpcException;
+import com.txomon.openwrt.ubusrpc.UbusRpcException;
 import com.txomon.rx.Events;
 
 import rx.Observable;
@@ -44,8 +44,6 @@ public class CustomCallFragment extends Fragment {
         final EditText ubusObject = (EditText) view.findViewById(R.id.customCallFragmentPathText);
         final Button sendButton = (Button) view.findViewById(R.id.customCallFragmentSendButton);
 
-        final Observable<String> ubusObjectText = Events.text(ubusObject);
-        final Observable<String> ubusMethodText = Events.text(ubusMethod);
         final Observable<Object> sendCallClick = Events.click(sendButton);
 
         sendCallClick
