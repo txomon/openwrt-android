@@ -19,11 +19,11 @@ import com.txomon.openwrt.ubusrpc.UbusRpcClient;
 import com.txomon.openwrt.ubusrpc.UbusRpcException;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Observer;
-import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -72,14 +72,21 @@ public class MainActivity extends AppCompatActivity
                             }
                         }
                 )
-                .retryWhen(new Func1<Observable<? extends Throwable>, Observable<?>>() {
-                    @Override
-                    public Observable<?> call(Observable<? extends Throwable> observable) {
-                        if (observable.toBlocking().first() instanceof UbusRpcException)
-                            return Observable.timer(5, TimeUnit.SECONDS);
-                        return Observable.empty();
-                    }
-                })
+                .retryWhen(
+                        new Func1<Observable<? extends Throwable>, Observable<?>>() {
+                            @Override
+                            public Observable<?> call(Observable<? extends Throwable> observable) {
+                                return observable.flatMap(new Func1<Throwable, Observable<?>>() {
+                                    @Override
+                                    public Observable<?> call(Throwable throwable) {
+                                        if (throwable instanceof UbusRpcException)
+                                            return Observable.timer(5, TimeUnit.SECONDS);
+                                        return Observable.empty();
+                                    }
+                                });
+                            }
+                        }
+                )
                 .subscribeOn(Schedulers.io())
                 .subscribe();
 
