@@ -60,6 +60,7 @@ public class UbusRpcClient implements UbusClientInterface {
 
         request = new JSONRPC2Request(method, rpc_params, 0);
         try {
+            Log.d(TAG, "Request: " + request.toJSONString());
             jsonRpcResponse = session.send(request);
         } catch (JSONRPC2SessionException e) {
             Log.e(TAG, "Send error: " + request.toJSONString());
@@ -103,7 +104,12 @@ public class UbusRpcClient implements UbusClientInterface {
         if (jsonListRpcResponse.size() > 2) {
             throw new UbusRpcException("Response not ret+res");
         }
-        return jsonListRpcResponse.get(1);
+        if (jsonListRpcResponse.size() == 1) {
+            return null;
+        } else if (jsonListRpcResponse.size() == 2) {
+            return jsonListRpcResponse.get(1);
+        } else
+            throw new UbusRpcException("Unknown number of arguments " + jsonListRpcResponse.size());
     }
 
     public Map<String, Map<String, Map<String, String>>> list(String path) throws UbusRpcException {

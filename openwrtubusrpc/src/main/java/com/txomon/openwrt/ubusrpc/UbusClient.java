@@ -1,9 +1,12 @@
 package com.txomon.openwrt.ubusrpc;
 
+import android.util.ArraySet;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,22 +21,31 @@ public class UbusClient {
 
     public UbusClient(String endpoint) {
         rpcClient = new UbusRpcClient(endpoint);
+        ubusSpec = new HashMap<>();
     }
 
-    public boolean check(String ubusObject, String ubusMethod, Map arguments) {
-        Set<String> args;
+    public boolean check(String ubusObject, String ubusMethod, Map<String, Object> arguments) {
+        Set<String> allArgs = new HashSet<>();
 
         UbusObject object = ubusSpec.get(ubusObject);
 
         if (object == null)
             return false;
         Map<String, Class> argumentSpec = object.spec.get(ubusMethod);
-        args = argumentSpec.keySet();
-        args.addAll(arguments.keySet());
+        if (arguments == null)
+            return argumentSpec.size() == 0;
 
-        for (String arg : args) {
+        allArgs.addAll(argumentSpec.keySet());
+        if (allArgs.addAll(arguments.keySet()))
+            return false;
+
+        for (String arg : allArgs) {
             Class type = argumentSpec.get(arg);
             Object argument = arguments.get(arg);
+            if (type == null || argument == null) {
+                Log.d(TAG, "Type or/and argument are null arg:" + type + "argument:" + argument);
+                return false;
+            }
             if (!type.isAssignableFrom(argument.getClass())) {
                 Log.d(TAG, "Argument not complying: " + arg + " is not " + type.toString());
                 return false;
@@ -69,8 +81,8 @@ public class UbusClient {
         return methods;
     }
 
-    public SortedMap<String,Class> getArguments(String object, String method) {
-        SortedMap<String,Class> arguments = new TreeMap();
+    public SortedMap<String, Class> getArguments(String object, String method) {
+        SortedMap<String, Class> arguments = new TreeMap();
         UbusObject ubusObject = ubusSpec.get(object);
         arguments.putAll(ubusObject.spec.get(method));
         return arguments;
